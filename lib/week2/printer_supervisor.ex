@@ -13,7 +13,7 @@ defmodule PrinterSupervisor do
       for i <- 1..nr,
           do: %{
             id: String.to_atom("printer#{i}"),
-            start: {Printer, :start_link, [30]}
+            start: {Week2.Printer, :start_link, [30]}
           }
 
     Supervisor.init(children, strategy: :one_for_one)
