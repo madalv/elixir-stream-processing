@@ -7,6 +7,7 @@ defmodule Week1.Statistics do
   end
 
   def init(state) do
+    Logger.info("Statistics analyzer #{inspect(self())} is up.")
     :timer.send_after(state[:period], self(), :print)
     {:ok, state}
   end

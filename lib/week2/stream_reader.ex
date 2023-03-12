@@ -1,4 +1,4 @@
-defmodule Week1.Reader do
+defmodule Week2.Reader do
   use GenServer
   require Logger
 
@@ -13,8 +13,7 @@ defmodule Week1.Reader do
   end
 
   def handle_info(%HTTPoison.AsyncChunk{chunk: chunk}, state) do
-    Printer.print_tweet(state[:printer_pid], chunk)
-    # Week1.Statistics.analyze_chunk(chunk)
+    LoadBalancer.send_chunk(chunk)
     {:noreply, state}
   end
 
