@@ -8,6 +8,7 @@ defmodule Week3.PoolManager do
 
   def init(min_nodes) do
     Logger.info("Pool manager #{inspect(self())} is up.")
+    # :timer.send_after(200, self(), :check_avg)
     {:ok, min_nodes}
   end
 
@@ -17,6 +18,21 @@ defmodule Week3.PoolManager do
 
   def trigger_pool_dec() do
     GenServer.cast(__MODULE__, {:decrease})
+  end
+
+  def check_avg(avg) do
+    cond do
+      avg >= 40 ->
+        trigger_pool_inc()
+        Logger.warn("Avg #{avg}, gotta raise up the nr")
+
+      avg <= 20 ->
+        trigger_pool_dec()
+        Logger.warn("Avg #{avg}, gotta cut down the nr")
+
+      true ->
+        Logger.warn("Avg #{avg}, everything is chill")
+    end
   end
 
   def handle_cast({:increase}, state) do

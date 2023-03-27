@@ -51,7 +51,6 @@ defmodule Week3.PrinterSupervisor do
     Supervisor.delete_child(__MODULE__, String.to_atom("printer#{nr}"))
     Week3.LoadBalancer.remove_node(nr)
     Logger.debug("Removed new child #{nr} #{inspect(Supervisor.which_children(__MODULE__))}")
-
   end
 
   def get_workers_len() do
