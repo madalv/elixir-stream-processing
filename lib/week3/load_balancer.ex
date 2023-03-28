@@ -62,7 +62,7 @@ defmodule Week3.LoadBalancer do
 
   def handle_cast({:cleanse_conn, node}, state) do
     nodes = Map.put(state[:nodes], node, 0)
-    Logger.warn("Printer #{node} is restarted; #{inspect(nodes)}")
+    Logger.warn("Printer #{node} is down/restarted; #{inspect(nodes)}")
     {:noreply, %{state | nodes: nodes}}
   end
 

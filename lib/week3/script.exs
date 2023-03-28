@@ -1,6 +1,6 @@
 Week3.PrinterSupervisor.start_link(3)
 
-Week3.PoolManager.start_link(3)
+Week3.PoolManager.start_link({3, 40, 30})
 
 Week3.LoadBalancer.start_link(3)
 

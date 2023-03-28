@@ -13,7 +13,7 @@ defmodule Week3.PrinterSupervisor do
       for i <- 1..nr,
           do: %{
             id: String.to_atom("printer#{i}"),
-            start: {Week3.Printer, :start_link, [{30, 0}]}
+            start: {Week3.Printer, :start_link, [{15, 0}]}
           }
 
     # max restarts / max seconds needed for the parent not to die of depression :))

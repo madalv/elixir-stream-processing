@@ -2,14 +2,13 @@ defmodule Week3.PoolManager do
   use GenServer
   require Logger
 
-  def start_link(min_nodes) do
-    GenServer.start_link(__MODULE__, min_nodes, name: __MODULE__)
+  def start_link({min_nodes, req_bound_up, req_bound_down}) do
+    GenServer.start_link(__MODULE__, {min_nodes, req_bound_up, req_bound_down}, name: __MODULE__)
   end
 
-  def init(min_nodes) do
+  def init(state) do
     Logger.info("Pool manager #{inspect(self())} is up.")
-    # :timer.send_after(200, self(), :check_avg)
-    {:ok, min_nodes}
+    {:ok, state}
   end
 
   def trigger_pool_inc() do
@@ -21,18 +20,24 @@ defmodule Week3.PoolManager do
   end
 
   def check_avg(avg) do
+    GenServer.cast(__MODULE__, {:check_avg, avg})
+  end
+
+  def handle_cast({:check_avg, avg}, {min_nodes, req_bound_up, req_bound_down}) do
     cond do
-      avg >= 40 ->
+      avg >= req_bound_up ->
         trigger_pool_inc()
         Logger.warn("Avg #{avg}, gotta raise up the nr")
 
-      avg <= 20 ->
+      avg <= req_bound_down ->
         trigger_pool_dec()
         Logger.warn("Avg #{avg}, gotta cut down the nr")
 
       true ->
         Logger.warn("Avg #{avg}, everything is chill")
     end
+
+    {:noreply, {min_nodes, req_bound_up, req_bound_down}}
   end
 
   def handle_cast({:increase}, state) do
@@ -40,10 +45,10 @@ defmodule Week3.PoolManager do
     {:noreply, state}
   end
 
-  def handle_cast({:decrease}, min_nodes) do
+  def handle_cast({:decrease}, {min_nodes, req_bound_up, req_bound_down}) do
     nr = Week3.PrinterSupervisor.get_workers_len()
 
     if nr > min_nodes, do: Week3.PrinterSupervisor.remove_last_worker()
-    {:noreply, min_nodes}
+    {:noreply, {min_nodes, req_bound_up, req_bound_down}}
   end
 end
