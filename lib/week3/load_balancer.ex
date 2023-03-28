@@ -99,7 +99,7 @@ defmodule Week3.LoadBalancer do
 
     Logger.info("Node nr: #{node}, sent to #{inspect(printer)}")
 
-    Week2.Printer.print_tweet(printer, chunk, node)
+    Week3.Printer.print_tweet(printer, chunk, node)
 
     {:noreply, %{state | msg_nr: state[:msg_nr] + 1, nodes: nodes, avg: avg}}
   end
