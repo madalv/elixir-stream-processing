@@ -1,3 +1,5 @@
+Week3.HashKeeper.start_link()
+
 Week3.PrinterSupervisor.start_link(3)
 
 Week3.PoolManager.start_link({3, 40, 30})

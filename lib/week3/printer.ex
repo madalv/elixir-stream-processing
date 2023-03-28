@@ -23,8 +23,6 @@ defmodule Week3.Printer do
 
   def handle_cast({:print_tweet, chunk, node}, {rate_param, _node, swearwords}) do
     time = Statistics.Distributions.Poisson.rand(rate_param)
-    :timer.sleep(round(time))
-
     "event: \"message\"\n\ndata: " <> message = chunk
     {success, data} = Jason.decode(String.trim(message))
 
@@ -32,7 +30,11 @@ defmodule Week3.Printer do
     redacted = censor_tweet(tweet, swearwords)
 
     if success == :ok do
-      Logger.info("Received tweet: #{redacted}  \n")
+      if !Week3.HashKeeper.has_hash?(tweet) do
+        Week3.HashKeeper.add_hash(tweet)
+        :timer.sleep(round(time))
+        Logger.info("Received tweet: #{redacted}  \n")
+      end
     else
       exit(:panic_msg)
     end
@@ -51,6 +53,7 @@ defmodule Week3.Printer do
     |> String.split(" ", trim: true)
     |> Enum.map(fn word ->
       w = String.downcase(word)
+
       if w in swearwords do
         String.duplicate("*", String.length(w))
       else

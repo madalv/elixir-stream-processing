@@ -84,23 +84,36 @@ defmodule Week3.LoadBalancer do
   end
 
   def handle_cast({:send, chunk}, state) do
-    # node = rem(state[:msg_nr], state[:nr_nodes])
-
     node = state[:nodes] |> Enum.sort(fn {_, v1}, {_, v2} -> v1 < v2 end) |> Enum.at(0) |> elem(0)
 
     sum = Enum.reduce(state[:nodes], 0, fn {_, v}, acc -> acc + v end)
     avg = sum / map_size(state[:nodes])
 
-    # Logger.debug(inspect(node))
-    # Logger.debug(inspect(state[:nodes]))
+    # printer = Week3.PrinterSupervisor.get_process(node)
+    # nodes = Map.put(state[:nodes], node, state[:nodes][node] + 1)
 
-    printer = Week3.PrinterSupervisor.get_process(node)
-    nodes = Map.put(state[:nodes], node, state[:nodes][node] + 1)
+    # Logger.info("Node nr: #{node}, sent to #{inspect(printer)}")
 
-    Logger.info("Node nr: #{node}, sent to #{inspect(printer)}")
+    # Week2.Printer.print_tweet(printer, chunk, node)
 
-    Week2.Printer.print_tweet(printer, chunk, node)
+    nodes = exec_spec(state[:nodes], chunk)
 
     {:noreply, %{state | msg_nr: state[:msg_nr] + 1, nodes: nodes, avg: avg}}
+  end
+
+  def exec_spec(nodes, chunk) do
+    selected = nodes |> Enum.sort(fn {_, v1}, {_, v2} -> v1 < v2 end) |> Enum.slice(0, 3)
+
+    #Logger.debug(inspect(selected))
+    new =
+      for n <- selected, into: nodes do
+        node = elem(n, 0)
+        printer = Week3.PrinterSupervisor.get_process(node)
+        Week2.Printer.print_tweet(printer, chunk, node)
+        #Logger.info("Node nr: #{node}, sent to #{inspect(printer)}")
+        {node, nodes[node] + 1}
+      end
+
+    new
   end
 end
