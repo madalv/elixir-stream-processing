@@ -36,10 +36,10 @@ defmodule Week4.Printer do
     "event: \"message\"\n\ndata: " <> message = chunk
     {success, data} = Jason.decode(String.trim(message))
 
-    tweet = data["message"]["tweet"]["text"]
-    redacted = censor_tweet(tweet, state[:swearwords])
-
     if success == :ok do
+      tweet = data["message"]["tweet"]["text"]
+      redacted = censor_tweet(tweet, state[:swearwords])
+
       Logger.info("Received tweet: #{redacted}  \n")
     else
       exit(:panic_msg)

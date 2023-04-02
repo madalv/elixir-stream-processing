@@ -34,7 +34,7 @@ defmodule Week4.SentimentAnalyzer do
           acc + score
         end)
 
-      Logger.info("#{inspect(tweet)} SCORE: #{score / nr}")
+      Logger.info("#{inspect(tweet)} \n SCORE: #{score / nr}")
     else
       exit(:panic_msg)
     end

@@ -10,31 +10,23 @@ defmodule Week4.EngagementAnalyzer do
     Process.flag(:trap_exit, true)
     Logger.info("Engagement analyzer #{inspect(self())} is up.")
 
-    response = HTTPoison.get!("http://localhost:4000/emotion_values")
-
-    map = response.body |> parse()
-
-    {:ok, %{emotion: map, lb_pid: lb_pid, node: 0}}
+    {:ok, %{lb_pid: lb_pid, node: 0}}
   end
 
   def handle_info({:execute, chunk, node}, state) do
     "event: \"message\"\n\ndata: " <> message = chunk
     {success, data} = Jason.decode(String.trim(message))
-    tweet = data["message"]["tweet"]["text"]
 
     if success == :ok do
-      split = tweet |> String.split(" ", trim: true)
+      tweet = data["message"]["tweet"]
 
-      nr = length(split)
+      favorites = extract_fav(tweet)
+      retweets = extract_retweets(tweet)
+      followers = extract_followers(tweet)
 
-      score =
-        split
-        |> Enum.reduce(0, fn w, acc ->
-          score = Map.get(state[:emotion], w, 0)
-          acc + score
-        end)
+      score = favorites + retweets / followers
 
-      Logger.info("#{inspect(tweet)} SCORE: #{score / nr}")
+      Logger.info("ENG SCORE: fav #{favorites} | ret #{retweets} | fol  #{followers} | score #{score}  \n #{tweet["text"]}")
     else
       exit(:panic_msg)
     end
@@ -51,19 +43,30 @@ defmodule Week4.EngagementAnalyzer do
     {:reply, state[:lb_pid], state}
   end
 
-  defp parse(text) do
-    text
-    |> String.split("\n")
-    |> Enum.reduce(%{}, fn line, acc ->
-      words = String.split(line, ~r/\s+/, trim: true)
-      value = String.to_integer(List.last(words))
-      key = Enum.join(List.delete_at(words, -1), " ")
-      Map.put(acc, key, value)
-    end)
-  end
-
   def terminate(reason, state) do
     Week4.LoadBalancer.cleanse_conn(state[:lb_pid], state[:node])
-    Logger.error("Sentiment analyzer #{inspect(self())} going down, reason: #{inspect(reason)}")
+    Logger.error("Engagement analyzer #{inspect(self())} going down, reason: #{inspect(reason)}")
+  end
+
+  defp extract_fav(tweet) do
+    favorites1 = tweet["retweeted_status"]["favorite_count"]
+    if favorites1 == nil do
+      tweet["favorite_count"]
+    else
+      favorites1
+    end
+  end
+
+  defp extract_retweets(tweet) do
+    favorites1 = tweet["retweeted_status"]["retweet_count"]
+    if favorites1 == nil do
+      tweet["retweet_count"]
+    else
+      favorites1
+    end
+  end
+
+  defp extract_followers(tweet) do
+    tweet["user"]["followers_count"]
   end
 end
