@@ -14,7 +14,7 @@ defmodule Week4.Printer do
       File.read!("lib/week3/swearwords.json")
       |> Jason.decode!()
 
-    {:ok, {rate_param, node, swearwords, lb_pid}}
+    {:ok, %{rate_param: rate_param, node: node, lb_pid: lb_pid, swearwords: swearwords}}
   end
 
   def print_tweet(pid, chunk, node) do
@@ -25,19 +25,19 @@ defmodule Week4.Printer do
     GenServer.call(pid, :lb)
   end
 
-  def handle_call(:lb, _from, {rate_param, node, swearwords, lb_pid}) do
-    {:reply, lb_pid, {rate_param, node, swearwords, lb_pid}}
+  def handle_call(:lb, _from, state) do
+    {:reply, state[:lb_pid], state}
   end
 
-  def handle_cast({:print_tweet, chunk, node}, {rate_param, _node, swearwords, lb_pid}) do
-    time = Statistics.Distributions.Poisson.rand(rate_param)
+  def handle_info({:execute, chunk, node}, state) do
+    time = Statistics.Distributions.Poisson.rand(state[:rate_param])
     :timer.sleep(round(time))
 
     "event: \"message\"\n\ndata: " <> message = chunk
     {success, data} = Jason.decode(String.trim(message))
 
     tweet = data["message"]["tweet"]["text"]
-    redacted = censor_tweet(tweet, swearwords)
+    redacted = censor_tweet(tweet, state[:swearwords])
 
     if success == :ok do
       Logger.info("Received tweet: #{redacted}  \n")
@@ -45,12 +45,12 @@ defmodule Week4.Printer do
       exit(:panic_msg)
     end
 
-    Week4.GenericLoadBalancer.remove_active_conn(lb_pid, node)
-    {:noreply, {rate_param, node, swearwords, lb_pid}}
+    Week4.LoadBalancer.remove_active_conn(state[:lb_pid], node)
+    {:noreply, %{state | node: node}}
   end
 
-  def terminate(reason, {_rate_param, node, _swearwords, lb_pid}) do
-    Week4.GenericLoadBalancer.cleanse_conn(lb_pid, node)
+  def terminate(reason, state) do
+    Week4.LoadBalancer.cleanse_conn(state[:lb_pid], state[:node])
     Logger.error("Printer #{inspect(self())} going down, reason: #{inspect(reason)}")
   end
 

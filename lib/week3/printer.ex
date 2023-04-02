@@ -51,6 +51,7 @@ defmodule Week3.Printer do
     |> String.split(" ", trim: true)
     |> Enum.map(fn word ->
       w = String.downcase(word)
+
       if w in swearwords do
         String.duplicate("*", String.length(w))
       else

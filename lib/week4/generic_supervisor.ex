@@ -9,17 +9,19 @@ defmodule Week4.GenericSupervisor do
   def init({nr, module, init_state}) do
     Process.flag(:trap_exit, true)
 
-    {:ok, lb} = Week4.GenericLoadBalancer.start_link({nr, self()})
+    {:ok, lb} = Week4.LoadBalancer.start_link({nr, self(), module})
 
-    {:ok, printer_manager} = Week4.PoolManager.start_link(%{
-      min_nodes: 3,
-      req_bound_up: 40,
-      req_bound_down: 30,
-      sup_pid: self(),
-      lb_pid: lb,
-      module: Week4.Printer})
+    {:ok, pool_manager} =
+      Week4.PoolManager.start_link(%{
+        min_nodes: 3,
+        req_bound_up: 40,
+        req_bound_down: 30,
+        sup_pid: self(),
+        lb_pid: lb,
+        module: module
+      })
 
-      Week4.GenericLoadBalancer.add_pool_manager_pid(lb, printer_manager)
+    Week4.LoadBalancer.add_pool_manager_pid(lb, pool_manager)
 
     children =
       for i <- 1..nr,
@@ -52,17 +54,17 @@ defmodule Week4.GenericSupervisor do
       start: {module, :start_link, [{30, 0, lb_pid}]}
     })
 
-    Week4.GenericLoadBalancer.add_new_node(lb_pid, nr)
+    Week4.LoadBalancer.add_new_node(lb_pid, nr)
 
     Logger.debug("Added new child #{nr} #{inspect(Supervisor.which_children(pid))}")
   end
 
-  def remove_last_worker(pid, lb_pid) do
+  def remove_last_worker(pid, module, lb_pid) do
     nr = get_workers_len(pid)
-    Supervisor.terminate_child(pid, String.to_atom("printer#{nr}"))
-    Supervisor.delete_child(pid, String.to_atom("printer#{nr}"))
-    Week4.GenericLoadBalancer.remove_node(lb_pid, nr)
-    Logger.debug("Removed new child #{nr} #{inspect(Supervisor.which_children(pid))}")
+    Supervisor.terminate_child(pid, String.to_atom("#{module}#{nr}"))
+    Supervisor.delete_child(pid, String.to_atom("#{module}#{nr}"))
+    Week4.LoadBalancer.remove_node(lb_pid, nr)
+    Logger.debug("Removed child #{nr} #{inspect(Supervisor.which_children(pid))}")
   end
 
   def get_workers_len(pid) do

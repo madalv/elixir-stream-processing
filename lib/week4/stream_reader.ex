@@ -13,7 +13,8 @@ defmodule Week4.Reader do
   end
 
   def handle_info(%HTTPoison.AsyncChunk{chunk: chunk}, state) do
-    Week4.GenericLoadBalancer.send_chunk(state[:lb_pid], chunk)
+    Week4.LoadBalancer.send_chunk(state[:printer_lb_pid], chunk)
+    Week4.LoadBalancer.send_chunk(state[:sent_lb_pid], chunk)
     {:noreply, state}
   end
 

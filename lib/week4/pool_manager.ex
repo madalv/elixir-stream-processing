@@ -52,7 +52,14 @@ defmodule Week4.PoolManager do
   def handle_cast({:decrease}, state) do
     nr = Week4.GenericSupervisor.get_workers_len(state[:sup_pid])
 
-    if nr > state[:min_nodes], do: Week4.GenericSupervisor.remove_last_worker(state[:sup_pid], state[:lb_pid])
+    if nr > state[:min_nodes],
+      do:
+        Week4.GenericSupervisor.remove_last_worker(
+          state[:sup_pid],
+          state[:module],
+          state[:lb_pid]
+        )
+
     {:noreply, state}
   end
 end

@@ -1,4 +1,4 @@
-defmodule Week4.GenericLoadBalancer do
+defmodule Week4.LoadBalancer do
   alias Week4.GenericSupervisor
   use GenServer
   require Logger
@@ -7,13 +7,23 @@ defmodule Week4.GenericLoadBalancer do
     GenServer.start_link(__MODULE__, state)
   end
 
-  def init({nr_nodes, printer_sup}) do
+  def init({nr_nodes, printer_sup, module}) do
     Logger.info("Load balancer #{inspect(self())} is up.")
     :timer.send_after(500, self(), :send_avg)
     nodes = for i <- 1..nr_nodes, into: %{}, do: {i, 0}
 
     Logger.debug(inspect(nodes))
-    {:ok, %{nr_nodes: nr_nodes, msg_nr: 0, nodes: nodes, avg: 0, printer_sup: printer_sup, manager_pid: "tobeadded"}}
+
+    {:ok,
+     %{
+       nr_nodes: nr_nodes,
+       msg_nr: 0,
+       nodes: nodes,
+       avg: 0,
+       sup_pid: printer_sup,
+       manager_pid: "tobeadded",
+       module: module
+     }}
   end
 
   def add_pool_manager_pid(pid, manager) do
@@ -71,7 +81,7 @@ defmodule Week4.GenericLoadBalancer do
 
   def handle_cast({:cleanse_conn, node}, state) do
     nodes = Map.put(state[:nodes], node, 0)
-    Logger.warn("Printer #{node} is down/restarted; #{inspect(nodes)}")
+    Logger.warn("Worker #{inspect(state[:module])} #{node} is down/restarted; #{inspect(nodes)}")
     {:noreply, %{state | nodes: nodes}}
   end
 
@@ -85,7 +95,7 @@ defmodule Week4.GenericLoadBalancer do
         end
 
       nodes = Map.put(state[:nodes], node, val)
-      Logger.debug("Printer #{node} is done; #{inspect(nodes)}")
+      Logger.debug("Worker #{inspect(state[:module])} #{node} is done; #{inspect(nodes)}")
       {:noreply, %{state | nodes: nodes}}
     else
       {:noreply, state}
@@ -93,18 +103,17 @@ defmodule Week4.GenericLoadBalancer do
   end
 
   def handle_cast({:send, chunk}, state) do
-
     node = state[:nodes] |> Enum.sort(fn {_, v1}, {_, v2} -> v1 < v2 end) |> Enum.at(0) |> elem(0)
 
     sum = Enum.reduce(state[:nodes], 0, fn {_, v}, acc -> acc + v end)
     avg = sum / map_size(state[:nodes])
 
-    printer = Week4.GenericSupervisor.get_process(node, state[:printer_sup])
+    worker = Week4.GenericSupervisor.get_process(node, state[:sup_pid])
     nodes = Map.put(state[:nodes], node, state[:nodes][node] + 1)
 
-    Logger.info("Node nr: #{node}, sent to #{inspect(printer)}")
+    Logger.info("Node #{inspect(state[:module])} nr: #{node}, sent to #{inspect(worker)}")
 
-    Week4.Printer.print_tweet(printer, chunk, node)
+    Process.send(worker, {:execute, chunk, node}, [])
 
     {:noreply, %{state | msg_nr: state[:msg_nr] + 1, nodes: nodes, avg: avg}}
   end
