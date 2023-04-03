@@ -11,6 +11,8 @@ lb_s =
 
 lb_e = Week4.GenericSupervisor.get_process(0, eng_sup) |> Week4.EngagementAnalyzer.get_lb_pid()
 
+Week4.UserEngagement.start_link([])
+
 Week4.Reader.start_link(%{
   url: "http://localhost:4000/tweets/1",
   printer_lb_pid: lb_p,

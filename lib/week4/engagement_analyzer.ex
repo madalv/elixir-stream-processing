@@ -23,10 +23,15 @@ defmodule Week4.EngagementAnalyzer do
       favorites = extract_fav(tweet)
       retweets = extract_retweets(tweet)
       followers = extract_followers(tweet)
+      name = extract_name(tweet)
 
       score = favorites + retweets / followers
 
-      Logger.info("ENG SCORE: fav #{favorites} | ret #{retweets} | fol  #{followers} | score #{score}  \n #{tweet["text"]}")
+      send_user_ratio(name, score)
+
+      Logger.info(
+        "ENG SCORE: fav #{favorites} | ret #{retweets} | fol  #{followers} | score #{score}  \n #{tweet["text"]}"
+      )
     else
       exit(:panic_msg)
     end
@@ -50,6 +55,7 @@ defmodule Week4.EngagementAnalyzer do
 
   defp extract_fav(tweet) do
     favorites1 = tweet["retweeted_status"]["favorite_count"]
+
     if favorites1 == nil do
       tweet["favorite_count"]
     else
@@ -59,6 +65,7 @@ defmodule Week4.EngagementAnalyzer do
 
   defp extract_retweets(tweet) do
     favorites1 = tweet["retweeted_status"]["retweet_count"]
+
     if favorites1 == nil do
       tweet["retweet_count"]
     else
@@ -68,5 +75,13 @@ defmodule Week4.EngagementAnalyzer do
 
   defp extract_followers(tweet) do
     tweet["user"]["followers_count"]
+  end
+
+  defp extract_name(tweet) do
+    tweet["user"]["name"]
+  end
+
+  defp send_user_ratio(username, ratio) do
+    Week4.UserEngagement.add_ratio(username, ratio)
   end
 end

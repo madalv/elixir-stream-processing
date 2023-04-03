@@ -81,6 +81,7 @@ defmodule Week4.LoadBalancer do
 
   def handle_cast({:cleanse_conn, node}, state) do
     nodes = Map.put(state[:nodes], node, 0)
+
     # Logger.warn("Worker #{inspect(state[:module])} #{node} is down/restarted; #{inspect(nodes)}")
     {:noreply, %{state | nodes: nodes}}
   end

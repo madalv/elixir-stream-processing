@@ -2,10 +2,6 @@ defmodule Week4.PoolManager do
   use GenServer
   require Logger
 
-  # def start_link({min_nodes, req_bound_up, req_bound_down, sup_pid, module}) do
-  #   GenServer.start_link(__MODULE__, {min_nodes, req_bound_up, req_bound_down, sup_pid})
-  # end
-
   def start_link(state) do
     GenServer.start_link(__MODULE__, state)
   end
@@ -35,7 +31,7 @@ defmodule Week4.PoolManager do
 
       avg <= state[:req_bound_down] ->
         trigger_pool_dec(self())
-        Logger.warn("Avg #{avg}, gotta cut down the nr")
+        Logger.warn("Avg #{avg}, gotta cut down the nr if possible")
 
       true ->
         Logger.warn("Avg #{avg}, everything is chill")
