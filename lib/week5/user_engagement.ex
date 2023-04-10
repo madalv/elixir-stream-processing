@@ -1,4 +1,4 @@
-defmodule Week4.UserEngagement do
+defmodule Week5.UserEngagement do
   use GenServer
   require Logger
 
@@ -20,7 +20,7 @@ defmodule Week4.UserEngagement do
     new_state = Map.put(state[:users], username, val + ratio)
 
     Logger.debug(
-      "USER RATIO | #{username} #{ratio} => #{val + ratio} | nr users #{Kernel.map_size(state[:users])}"
+      "USER RATIO | #{username} #{ratio} => #{val + ratio} |  #{Kernel.map_size(state[:users])}"
     )
 
     {:noreply, %{users: new_state}}

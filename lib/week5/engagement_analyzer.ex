@@ -1,4 +1,5 @@
-defmodule Week4.EngagementAnalyzer do
+defmodule Week5.EngagementAnalyzer do
+  alias Week5.Aggregator
   use GenServer
   require Logger
 
@@ -29,14 +30,15 @@ defmodule Week4.EngagementAnalyzer do
 
       send_user_ratio(name, score)
 
-      Logger.info(
-        "ENG SCORE: fav #{favorites} | ret #{retweets} | fol  #{followers} | score #{score}  \n #{tweet["text"]}"
-      )
+      # Logger.info(
+      #   "ENG SCORE: fav #{favorites} | ret #{retweets} | fol  #{followers} | score #{score}  \n #{tweet["text"]}"
+      # )
+      Aggregator.add_data({tweet["id"], score})
     else
       exit(:panic_msg)
     end
 
-    Week4.LoadBalancer.remove_active_conn(state[:lb_pid], node)
+    Week5.LoadBalancer.remove_active_conn(state[:lb_pid], node)
     {:noreply, %{state | node: node}}
   end
 
@@ -49,7 +51,7 @@ defmodule Week4.EngagementAnalyzer do
   end
 
   def terminate(reason, state) do
-    Week4.LoadBalancer.cleanse_conn(state[:lb_pid], state[:node])
+    Week5.LoadBalancer.cleanse_conn(state[:lb_pid], state[:node])
     Logger.error("Engagement analyzer #{inspect(self())} going down, reason: #{inspect(reason)}")
   end
 
@@ -82,6 +84,6 @@ defmodule Week4.EngagementAnalyzer do
   end
 
   defp send_user_ratio(username, ratio) do
-    Week4.UserEngagement.add_ratio(username, ratio)
+    Week5.UserEngagement.add_ratio(username, ratio)
   end
 end

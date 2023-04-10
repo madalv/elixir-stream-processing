@@ -1,4 +1,4 @@
-defmodule Week4.LoadBalancer do
+defmodule Week5.LoadBalancer do
   use GenServer
   require Logger
 
@@ -64,7 +64,7 @@ defmodule Week4.LoadBalancer do
   end
 
   def handle_info(:send_avg, state) do
-    Week4.PoolManager.check_avg(state[:manager_pid], state[:avg])
+    Week5.PoolManager.check_avg(state[:manager_pid], state[:avg])
     :timer.send_after(500, self(), :send_avg)
 
     {:noreply, state}
@@ -95,7 +95,7 @@ defmodule Week4.LoadBalancer do
         end
 
       nodes = Map.put(state[:nodes], node, val)
-      Logger.debug("Worker #{inspect(state[:module])} #{node} is done; #{inspect(nodes)}")
+      # Logger.debug("Worker #{inspect(state[:module])} #{node} is done; #{inspect(nodes)}")
       {:noreply, %{state | nodes: nodes}}
     else
       {:noreply, state}
@@ -108,7 +108,7 @@ defmodule Week4.LoadBalancer do
     sum = Enum.reduce(state[:nodes], 0, fn {_, v}, acc -> acc + v end)
     avg = sum / map_size(state[:nodes])
 
-    worker = Week4.GenericSupervisor.get_process(node, state[:sup_pid])
+    worker = Week5.GenericSupervisor.get_process(node, state[:sup_pid])
     nodes = Map.put(state[:nodes], node, state[:nodes][node] + 1)
 
     Logger.info("Node #{inspect(state[:module])} nr: #{node}, sent to #{inspect(worker)}")
