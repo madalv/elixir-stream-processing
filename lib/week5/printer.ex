@@ -43,8 +43,13 @@ defmodule Week5.Printer do
 
       redacted = censor_tweet(tweet, state[:swearwords])
 
+      if data["message"]["tweet"]["retweeted_status"] != nil do
+        Week5.LoadBalancer.send_retweet(data["message"]["tweet"]["retweeted_status"])
+      end
+
+      Logger.info("Received tweet: #{redacted}  \n")
+      # Logger.info(inspect(chunk))
       Aggregator.add_data({id, redacted})
-      # Logger.info("Received tweet: #{redacted}  \n")
     else
       exit(:panic_msg)
     end

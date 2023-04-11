@@ -19,7 +19,7 @@ defmodule Week5.Aggregator do
 
     if tuple_size(tuple) == 3 do
       Logger.debug("TUPLE COMPLETE: #{inspect(tuple)}")
-      Week5.Batcher.add_tweet(tuple)
+      Week5.Batcher.add_tweet(%{id => tuple})
       {:noreply, Map.delete(state, id)}
     else
       {:noreply, Map.put(state, id, tuple)}

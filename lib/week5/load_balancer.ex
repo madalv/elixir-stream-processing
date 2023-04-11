@@ -117,4 +117,15 @@ defmodule Week5.LoadBalancer do
 
     {:noreply, %{state | msg_nr: state[:msg_nr] + 1, nodes: nodes, avg: avg}}
   end
+
+  def send_retweet(retweeted_status) do
+    chunk =
+      "event: \"message\"\n\ndata: {\"message\": {\"tweet\":" <>
+        Jason.encode!(retweeted_status) <>
+        "}}"
+
+    # Logger.info("Sending retweet: #{retweeted_status["text"]}")
+
+    send(Week5.Reader, %HTTPoison.AsyncChunk{chunk: chunk})
+  end
 end

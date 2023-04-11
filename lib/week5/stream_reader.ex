@@ -3,7 +3,7 @@ defmodule Week5.Reader do
   require Logger
 
   def start_link(state) do
-    GenServer.start_link(__MODULE__, state)
+    GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
 
   def init(state) do
