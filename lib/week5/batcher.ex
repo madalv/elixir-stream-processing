@@ -1,4 +1,5 @@
 defmodule Week5.Batcher do
+  alias Week5.Aggregator
   use GenServer
   require Logger
 
@@ -9,6 +10,7 @@ defmodule Week5.Batcher do
   def init({timeout, batch_size}) do
     Logger.info("Batcher #{inspect(self())} is up.")
     :timer.send_after(timeout, self(), :timeout_print)
+    Aggregator.request_next(1)
     {:ok, %{timeout: timeout, size: batch_size, batch: [], time_expired?: false}}
   end
 
@@ -18,6 +20,12 @@ defmodule Week5.Batcher do
 
   def handle_cast({:add, data}, state) do
     batch = [data | state[:batch]]
+
+    len = elem(Process.info(self(), :message_queue_len), 1)
+
+    Logger.info("Batcher queue: #{len}")
+
+    if len == 0, do: Week5.Aggregator.request_next(1)
 
     if length(batch) == state[:size] do
       Logger.info("BATCH FULL #{state[:size]}:")

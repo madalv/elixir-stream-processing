@@ -43,9 +43,8 @@ defmodule Week5.Printer do
 
       redacted = censor_tweet(tweet, state[:swearwords])
 
-      if data["message"]["tweet"]["retweeted_status"] != nil do
-        Week5.LoadBalancer.send_retweet(data["message"]["tweet"]["retweeted_status"])
-      end
+      if data["message"]["tweet"]["retweeted_status"] != nil,
+        do: Week5.LoadBalancer.send_retweet(data["message"]["tweet"]["retweeted_status"])
 
       Logger.info("Received tweet: #{redacted}  \n")
       # Logger.info(inspect(chunk))
