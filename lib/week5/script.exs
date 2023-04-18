@@ -6,7 +6,7 @@ Week5.Aggregator.start_link([])
 
 {:ok, eng_sup} = Week5.GenericSupervisor.start_link({3, Week5.EngagementAnalyzer, {}})
 
-Week5.Batcher.start_link({300, 20})
+Week5.Batcher.start_link({300, 30})
 
 lb_p = Week5.GenericSupervisor.get_process(0, printer_sup) |> Week5.Printer.get_lb_pid()
 
