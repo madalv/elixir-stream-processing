@@ -6,9 +6,6 @@ defmodule Week6.Db do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
 
-  def is_available() do
-    :rand.uniform(2) == 2
-  end
 
   def init(_) do
     users = :ets.new(:users, [:set, :public, :named_table])
@@ -28,7 +25,7 @@ defmodule Week6.Db do
   def handle_cast({:insert_user, id, username, score}, {users, tweets}) do
     :ets.insert(users, {id, %{user: username, eng_score: score}})
 
-    # Logger.info(inspect(:ets.tab2list(users)))
+    Logger.info(inspect(:ets.tab2list(users)))
     {:noreply, {users, tweets}}
   end
 
@@ -38,7 +35,7 @@ defmodule Week6.Db do
       {id, %{user_id: user_id, eng_score: eng_score, sent_score: sent_score, text: tweet}}
     )
 
-    # Logger.info(inspect(:ets.tab2list(tweets)))
+    Logger.info(inspect(:ets.tab2list(tweets)))
     {:noreply, {users, tweets}}
   end
 end
